@@ -48,10 +48,12 @@ Routers stay thin: validation in `schemas`, rules in `services`, persistence via
 - `prompt_versions(id, prompt_id FK, version INT, template, variables JSON, model_settings JSON,
   metadata JSON, commit_message, content_hash, created_by, created_at)`, `UNIQUE(prompt_id, version)`
 - `prompt_labels(id, prompt_id FK, name, version_id FK, updated_by, updated_at)`, `UNIQUE(prompt_id, name)`
-- `label_events(id, prompt_id FK, label, from_version, to_version, actor, created_at)` (audit trail)
+- `label_events(id BIGINT, prompt_id FK, label, from_version, to_version, actor, created_at)` (append-only audit
+  trail; the monotonically increasing id gives the exact order of moves)
 - `experiments(id, prompt_id FK, name, description, status, salt, traffic_percent, primary_metric,
   fallback_label, winner_variant_id, started_at, ended_at, created_at, updated_at)`, `UNIQUE(prompt_id, name)`
-- `experiment_variants(id, experiment_id FK, key, version_id FK, weight, is_control)`, `UNIQUE(experiment_id, key)`
+- `experiment_variants(id, experiment_id FK, key, version_id FK, weight, is_control, position)`,
+  `UNIQUE(experiment_id, key)`; `position` keeps the declared variant order
 - `events(id BIGINT, experiment_id FK, variant_id FK, subject_id, name, value FLOAT, event_id, created_at)`
   with indexes on `(experiment_id, name, variant_id)` and unique `(experiment_id, event_id)` for idempotency.
 
