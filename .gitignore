@@ -32,3 +32,4 @@ htmlcov/
 
 # Node (OpenSpec CLI)
 node_modules/
+.claude/worktrees/
