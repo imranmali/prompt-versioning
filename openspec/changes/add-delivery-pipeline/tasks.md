@@ -2,8 +2,8 @@
 
 ## 1. Containers
 
-- [ ] 1.1 Add multi-stage non-root `Dockerfile` and `.dockerignore`; verify `docker build` and `/healthz` smoke test
-- [ ] 1.2 Add `docker-compose.yml` with PostgreSQL and migrations; verify `docker compose config` is valid
+- [x] 1.1 Add multi-stage non-root `Dockerfile` and `.dockerignore`; verify `docker build` and `/healthz` smoke test
+- [x] 1.2 Add `docker-compose.yml` with PostgreSQL and migrations; verify `docker compose config` is valid
 
 ## 2. Continuous integration
 

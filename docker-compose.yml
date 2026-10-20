@@ -1,0 +1,76 @@
+# Local stack: PostgreSQL + one-shot migrations + the API.
+#
+#   docker compose up --build        # http://localhost:8000/docs
+#   docker compose down -v           # stop and drop the database volume
+#
+# Credentials below are for local development only.
+
+x-promptlab-env: &promptlab-env
+  PROMPTLAB_ENVIRONMENT: development
+  PROMPTLAB_DATABASE_URL: postgresql+asyncpg://promptlab:promptlab@db:5432/promptlab
+  PROMPTLAB_LOG_LEVEL: ${PROMPTLAB_LOG_LEVEL:-INFO}
+  PROMPTLAB_LOG_JSON: "true"
+  PROMPTLAB_METRICS_ENABLED: "true"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: promptlab
+      POSTGRES_PASSWORD: promptlab
+      POSTGRES_DB: promptlab
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U promptlab -d promptlab"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  migrate:
+    image: promptlab:local
+    build: .
+    command: ["migrate"]
+    environment:
+      <<: *promptlab-env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    image: promptlab:local
+    build: .
+    command:
+      - serve
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --workers
+      - ${WEB_CONCURRENCY:-2}
+    environment:
+      <<: *promptlab-env
+      PROMPTLAB_BOOTSTRAP_ADMIN_KEY: ${PROMPTLAB_BOOTSTRAP_ADMIN_KEY:-dev-admin-key-change-me}
+    ports:
+      - "${PROMPTLAB_PORT:-8000}:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=4)"
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pgdata:
