@@ -147,12 +147,15 @@ class PromptLabel(Base):
 
 
 class LabelEvent(TimestampMixin, Base):
-    """Append-only audit trail of label moves (``None`` means created/deleted)."""
+    """Append-only audit trail of label moves (``None`` means created/deleted).
+
+    ``id`` is monotonically increasing, so ordering by it yields the exact order of moves.
+    """
 
     __tablename__ = "label_events"
-    __table_args__ = (Index("ix_label_events_prompt_id_label", "prompt_id", "label", "created_at"),)
+    __table_args__ = (Index("ix_label_events_prompt_id_label", "prompt_id", "label", "id"),)
 
-    id: Mapped[uuid.UUID] = mapped_column(Uuid(), primary_key=True, default=uuid.uuid4)
+    id: Mapped[int] = mapped_column(EventId, primary_key=True, autoincrement=True)
     prompt_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("prompts.id", ondelete="CASCADE"), nullable=False
     )

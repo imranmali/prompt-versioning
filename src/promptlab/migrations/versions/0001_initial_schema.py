@@ -94,7 +94,12 @@ def upgrade() -> None:
 
     op.create_table(
         "label_events",
-        sa.Column("id", sa.Uuid(), nullable=False),
+        sa.Column(
+            "id",
+            sa.BigInteger().with_variant(sa.Integer(), "sqlite"),
+            autoincrement=True,
+            nullable=False,
+        ),
         sa.Column("prompt_id", sa.Uuid(), nullable=False),
         sa.Column("label", sa.String(length=64), nullable=False),
         sa.Column("from_version", sa.Integer(), nullable=True),
@@ -111,7 +116,7 @@ def upgrade() -> None:
     )
     with op.batch_alter_table("label_events", schema=None) as batch_op:
         batch_op.create_index(
-            "ix_label_events_prompt_id_label", ["prompt_id", "label", "created_at"], unique=False
+            "ix_label_events_prompt_id_label", ["prompt_id", "label", "id"], unique=False
         )
 
     op.create_table(
