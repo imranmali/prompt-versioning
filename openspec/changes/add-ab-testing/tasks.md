@@ -13,9 +13,9 @@
 
 ## 3. Analytics
 
-- [ ] 3.1 Implement statistics module (Wilson, z-test, Welch t-test, chi-square SRM); verify against reference values
-- [ ] 3.2 Implement batched idempotent event ingestion with variant attribution; verify ingestion tests
-- [ ] 3.3 Implement results endpoint for binary and numeric metrics with winner selection; verify results tests
+- [x] 3.1 Implement statistics module (Wilson, z-test, Welch t-test, chi-square SRM); verify against reference values
+- [x] 3.2 Implement batched idempotent event ingestion with variant attribution; verify ingestion tests
+- [x] 3.3 Implement results endpoint for binary and numeric metrics with winner selection; verify results tests
 
 ## 4. Resolution
 

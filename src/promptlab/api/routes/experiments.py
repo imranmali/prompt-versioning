@@ -12,14 +12,18 @@ from promptlab.cache import TTLCache
 from promptlab.models import ExperimentStatus
 from promptlab.schemas.common import ERROR_RESPONSES, Page
 from promptlab.schemas.experiments import (
+    METRIC_PATTERN,
     AssignRequest,
     AssignResponse,
     ExperimentComplete,
     ExperimentCreate,
     ExperimentOut,
+    ExperimentResults,
     ExperimentUpdate,
+    MetricKind,
 )
 from promptlab.security import Principal, require_editor, require_runtime
+from promptlab.services import analytics
 from promptlab.services import experiments as service
 
 router = APIRouter(tags=["experiments"], responses=ERROR_RESPONSES)
@@ -123,3 +127,22 @@ async def assign_subject(
     experiment_id: uuid.UUID, body: AssignRequest, session: AsyncSession = Depends(get_session)
 ) -> AssignResponse:
     return await service.assign_subject(session, experiment_id, body.subject_id)
+
+
+@router.get(
+    "/{experiment_id}/results",
+    response_model=ExperimentResults,
+    dependencies=[Depends(require_runtime)],
+)
+async def experiment_results(
+    experiment_id: uuid.UUID,
+    metric: str | None = Query(
+        None, pattern=METRIC_PATTERN, description="Defaults to the experiment's primary metric"
+    ),
+    kind: MetricKind = Query("binary", description="`binary` (conversion) or `numeric` (mean)"),
+    alpha: float = Query(0.05, gt=0, lt=0.5, description="Significance level"),
+    session: AsyncSession = Depends(get_session),
+) -> ExperimentResults:
+    return await analytics.experiment_results(
+        session, experiment_id, metric=metric, kind=kind, alpha=alpha
+    )
