@@ -7,7 +7,7 @@
 
 ## 2. Continuous integration
 
-- [ ] 2.1 Add `.github/workflows/ci.yml` (lint, typecheck, tests SQLite/PostgreSQL, migrations, OpenSpec, Docker, audit); verify CI is green on the pull request
+- [x] 2.1 Add `.github/workflows/ci.yml` (lint, typecheck, tests SQLite/PostgreSQL, migrations, OpenSpec, Docker, audit); verify CI is green on the pull request
 - [x] 2.2 Add Dependabot config and pull request template; verify files parse
 
 ## 3. Continuous delivery
