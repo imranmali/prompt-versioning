@@ -139,7 +139,8 @@ def test_wilson_interval() -> None:
     assert low == 0.0
     assert high == pytest.approx(0.2775328, abs=1e-6)
     low99, high99 = stats.wilson_interval(50, 100, alpha=0.01) or (0.0, 0.0)
-    assert low99 < 0.4038315 and high99 > 0.5961685
+    assert low99 < 0.4038315
+    assert high99 > 0.5961685
     assert stats.wilson_interval(10, 10) == (pytest.approx(0.7224672, abs=1e-6), 1.0)
     assert stats.wilson_interval(0, 0) is None
 
