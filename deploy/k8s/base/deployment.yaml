@@ -1,0 +1,134 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: promptlab
+  labels:
+    app.kubernetes.io/component: api
+spec:
+  # spec.replicas is intentionally omitted: the HorizontalPodAutoscaler (hpa.yaml) owns the
+  # replica count (minimum 3). Setting it here would make every `kubectl apply` reset an
+  # autoscaled Deployment back to the static value.
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: /metrics
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: promptlab
+              app.kubernetes.io/component: api
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: promptlab
+              app.kubernetes.io/component: api
+      containers:
+        - name: promptlab
+          image: ghcr.io/imranmali/prompt-versioning
+          imagePullPolicy: IfNotPresent
+          # $(VAR) references are expanded by Kubernetes from the env below.
+          args:
+            - serve
+            - --host
+            - 0.0.0.0
+            - --port
+            - "8000"
+            - --workers
+            - $(WEB_CONCURRENCY)
+            - --forwarded-allow-ips
+            - $(FORWARDED_ALLOW_IPS)
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            # Uvicorn worker processes per pod; size DB pools accordingly (configmap.yaml).
+            - name: WEB_CONCURRENCY
+              value: "2"
+            # Trust X-Forwarded-* from the in-cluster ingress / load balancer.
+            - name: FORWARDED_ALLOW_IPS
+              value: "*"
+          envFrom:
+            - configMapRef:
+                name: promptlab-config
+            # Keys: PROMPTLAB_DATABASE_URL (required), PROMPTLAB_BOOTSTRAP_ADMIN_KEY (optional).
+            - secretRef:
+                name: promptlab-secrets
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 2
+            timeoutSeconds: 2
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          lifecycle:
+            # Give endpoints/load balancers time to stop routing before SIGTERM.
+            preStop:
+              exec:
+                command: ["sleep", "5"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi

@@ -13,7 +13,7 @@
 ## 3. Continuous delivery
 
 - [ ] 3.1 Add `.github/workflows/cd.yml` publishing images to GHCR and releases on tags with gated Kubernetes deploy; verify workflow syntax
-- [ ] 3.2 Add Kustomize manifests under `deploy/k8s/`; verify `kubectl kustomize deploy/k8s` renders
+- [x] 3.2 Add Kustomize manifests under `deploy/k8s/`; verify `kubectl kustomize deploy/k8s` renders
 
 ## 4. Documentation
 

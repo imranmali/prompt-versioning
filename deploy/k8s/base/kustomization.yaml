@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Long-running API resources. The migration Job lives in ../jobs and is applied (and waited
+# for) separately before this kustomization, so re-applying the Deployment never re-runs it.
+# secret.example.yaml is documentation only and intentionally not listed here.
+
+namespace: promptlab
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: promptlab
+      app.kubernetes.io/part-of: promptlab
+    includeSelectors: true
+  - pairs:
+      app.kubernetes.io/managed-by: kustomize
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - service.yaml
+  - deployment.yaml
+  - hpa.yaml
+  - pdb.yaml
+
+images:
+  - name: ghcr.io/imranmali/prompt-versioning
+    newTag: latest

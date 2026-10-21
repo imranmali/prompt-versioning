@@ -1,0 +1,9 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: promptlab
+spec:
+  # Keep maxReplicas x WEB_CONCURRENCY x (DB_POOL_SIZE + DB_MAX_OVERFLOW) within the
+  # database's max_connections (or front PostgreSQL with PgBouncer). See docs/deployment.md.
+  minReplicas: 3
+  maxReplicas: 20

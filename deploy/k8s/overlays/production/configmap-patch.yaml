@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: promptlab-config
+data:
+  PROMPTLAB_ENVIRONMENT: production
+  PROMPTLAB_LOG_LEVEL: INFO
+  # e.g. "https://app.example.com,https://admin.example.com"
+  PROMPTLAB_CORS_ORIGINS: ""
