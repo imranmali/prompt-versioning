@@ -19,7 +19,7 @@
 
 ## 4. Resolution
 
-- [ ] 4.1 Implement `POST /v1/prompts/{name}/resolve` with cache, fallback label, exposure recording and rendering; verify resolve tests
+- [x] 4.1 Implement `POST /v1/prompts/{name}/resolve` with cache, fallback label, exposure recording and rendering; verify resolve tests
 
 ## Workflow follow-up
 
