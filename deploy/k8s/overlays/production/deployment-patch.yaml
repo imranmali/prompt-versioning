@@ -9,7 +9,7 @@ spec:
         - name: promptlab
           env:
             - name: WEB_CONCURRENCY
-              value: "2"
+              value: "1"
           resources:
             requests:
               cpu: 250m

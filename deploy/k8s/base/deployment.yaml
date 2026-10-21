@@ -70,9 +70,11 @@ spec:
               containerPort: 8000
               protocol: TCP
           env:
-            # Uvicorn worker processes per pod; size DB pools accordingly (configmap.yaml).
+            # Uvicorn worker processes per pod. Keep 1 and scale with pods: Prometheus
+            # counters are per process, so with several workers each scrape would only
+            # see one worker. Size DB pools accordingly (configmap.yaml).
             - name: WEB_CONCURRENCY
-              value: "2"
+              value: "1"
             # Trust X-Forwarded-* from the in-cluster ingress / load balancer.
             - name: FORWARDED_ALLOW_IPS
               value: "*"

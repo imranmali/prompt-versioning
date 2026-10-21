@@ -51,7 +51,7 @@ services:
       - --port
       - "8000"
       - --workers
-      - ${WEB_CONCURRENCY:-2}
+      - ${WEB_CONCURRENCY:-1}
     environment:
       <<: *promptlab-env
       PROMPTLAB_BOOTSTRAP_ADMIN_KEY: ${PROMPTLAB_BOOTSTRAP_ADMIN_KEY:-dev-admin-key-change-me}
