@@ -8,15 +8,14 @@ from __future__ import annotations
 
 import os
 from collections.abc import AsyncIterator, Awaitable, Callable
-from pathlib import Path
 
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from promptlab.config import Settings
-from promptlab.db import Base
+from promptlab.db import Base, create_engine
 from promptlab.main import create_app
 
 ADMIN_KEY = "test-bootstrap-admin-key"
@@ -24,11 +23,29 @@ ADMIN_KEY = "test-bootstrap-admin-key"
 ClientFactory = Callable[[str], Awaitable[AsyncClient]]
 
 
-@pytest.fixture
-def database_url(tmp_path: Path) -> str:
-    return os.environ.get(
-        "PROMPTLAB_TEST_DATABASE_URL", f"sqlite+aiosqlite:///{tmp_path / 'promptlab.db'}"
-    )
+@pytest.fixture(scope="session")
+def database_url(tmp_path_factory: pytest.TempPathFactory) -> str:
+    default = f"sqlite+aiosqlite:///{tmp_path_factory.mktemp('db') / 'promptlab.db'}"
+    return os.environ.get("PROMPTLAB_TEST_DATABASE_URL", default)
+
+
+@pytest.fixture(scope="session")
+async def _schema(database_url: str) -> AsyncIterator[None]:
+    """Create the schema once per session; ``app`` empties the tables before each test."""
+    engine = create_engine(Settings(database_url=database_url, _env_file=None))  # type: ignore[call-arg]
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+    await engine.dispose()
+
+
+async def _truncate(engine: AsyncEngine) -> None:
+    async with engine.begin() as conn:
+        for table in reversed(Base.metadata.sorted_tables):
+            await conn.execute(table.delete())
 
 
 @pytest.fixture
@@ -44,16 +61,11 @@ def settings(database_url: str) -> Settings:
 
 
 @pytest.fixture
-async def app(settings: Settings) -> AsyncIterator[FastAPI]:
+async def app(settings: Settings, _schema: None) -> AsyncIterator[FastAPI]:
     application = create_app(settings)
-    engine = application.state.engine
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+    await _truncate(application.state.engine)
     yield application
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-    await engine.dispose()
+    await application.state.engine.dispose()
 
 
 def _client(app: FastAPI, key: str | None) -> AsyncClient:
