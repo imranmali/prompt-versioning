@@ -2,14 +2,14 @@
 
 ## 1. Experiment management
 
-- [ ] 1.1 Add experiment schemas and service with variant validation and control selection; verify create/validation tests
-- [ ] 1.2 Implement list/get/patch and lifecycle transitions with single-running guard; verify lifecycle tests
-- [ ] 1.3 Implement complete with winner promotion through the label service; verify promotion test
+- [x] 1.1 Add experiment schemas and service with variant validation and control selection; verify create/validation tests
+- [x] 1.2 Implement list/get/patch and lifecycle transitions with single-running guard; verify lifecycle tests
+- [x] 1.3 Implement complete with winner promotion through the label service; verify promotion test
 
 ## 2. Assignment
 
-- [ ] 2.1 Implement hash bucketing with traffic gate and weighted selection; verify determinism and distribution tests
-- [ ] 2.2 Implement `POST /v1/experiments/{id}/assign`; verify enrolled/not-enrolled API tests
+- [x] 2.1 Implement hash bucketing with traffic gate and weighted selection; verify determinism and distribution tests
+- [x] 2.2 Implement `POST /v1/experiments/{id}/assign`; verify enrolled/not-enrolled API tests
 
 ## 3. Analytics
 
