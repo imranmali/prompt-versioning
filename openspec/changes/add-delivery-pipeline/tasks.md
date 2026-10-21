@@ -17,7 +17,7 @@
 
 ## 4. Documentation
 
-- [ ] 4.1 Add CONTRIBUTING, SECURITY, CHANGELOG and deployment docs; verify links resolve from README
+- [x] 4.1 Add CONTRIBUTING, SECURITY, CHANGELOG and deployment docs; verify links resolve from README
 
 ## Workflow follow-up
 

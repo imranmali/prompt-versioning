@@ -52,7 +52,9 @@ docker compose up --build
 curl http://localhost:8000/healthz
 ```
 
-The compose file sets a development bootstrap admin key. See [`docker-compose.yml`](docker-compose.yml).
+The compose file starts PostgreSQL, applies migrations once and runs the API with a
+development bootstrap admin key (`dev-admin-key-change-me`; override it with
+`PROMPTLAB_BOOTSTRAP_ADMIN_KEY`). See [`docker-compose.yml`](docker-compose.yml).
 
 ### Local development (uv)
 
@@ -69,7 +71,7 @@ Interactive API docs are at `http://localhost:8000/docs` (OpenAPI at `/openapi.j
 
 ```bash
 export PL=http://localhost:8000
-export ADMIN="X-API-Key: change-me-dev-admin-key"      # PROMPTLAB_BOOTSTRAP_ADMIN_KEY
+export ADMIN="X-API-Key: dev-admin-key-change-me"      # PROMPTLAB_BOOTSTRAP_ADMIN_KEY (compose default)
 
 # 1. Issue scoped keys (shown once)
 curl -s -X POST $PL/v1/api-keys -H "$ADMIN" -H 'content-type: application/json' \
@@ -136,6 +138,22 @@ Every error uses the same envelope:
 Guides: [Prompts & labels](docs/prompts.md) · [Experiments & statistics](docs/experiments.md) ·
 [Architecture](docs/architecture.md) · [Deployment & operations](docs/deployment.md)
 
+## Deployment
+
+- **Container image:** a multi-stage, non-root image is published to
+  `ghcr.io/imranmali/prompt-versioning` by the CD workflow, tagged `sha-<commit>` and `latest`
+  on `main` and with semver tags on `vX.Y.Z` releases.
+- **Kubernetes:** [`deploy/k8s`](deploy/k8s) has the Kustomize manifests: a Deployment with
+  probes and a hardened security context, a Service, an HPA (3–20 replicas), a PDB, and a
+  migration Job that runs before each rollout.
+- **CI/CD:** [`ci.yml`](.github/workflows/ci.yml) runs on every PR. It covers lint, mypy, tests on
+  Python 3.12/3.13 with SQLite and PostgreSQL, migration up/down, OpenSpec validation, and a
+  Docker build with a smoke test. [`cd.yml`](.github/workflows/cd.yml) publishes images and can
+  deploy to Kubernetes. [`security.yml`](.github/workflows/security.yml) audits dependencies
+  every week.
+
+See the [deployment guide](docs/deployment.md) for configuration, scaling and rollback.
+
 ## Configuration
 
 Configuration comes from environment variables with the `PROMPTLAB_` prefix. A `.env` file is
@@ -186,6 +204,12 @@ deploy/k8s/           Kustomize manifests (base + production overlay)
 docs/                 guides
 .github/workflows/    CI, CD and security pipelines
 ```
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md), the
+[Code of Conduct](CODE_OF_CONDUCT.md), the [security policy](SECURITY.md) and the
+[changelog](CHANGELOG.md).
 
 ## License
 
