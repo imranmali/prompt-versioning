@@ -1,0 +1,40 @@
+name: Security
+
+# Dependency vulnerability audit. Kept out of ci.yml on purpose: a newly published
+# advisory for an existing dependency must not block unrelated pull requests through the
+# required `ci-success` check. The weekly run surfaces new advisories on main; fix them
+# by bumping the dependency (Dependabot usually opens the PR).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "23 5 * * 1" # Mondays 05:23 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Dependency audit (pip-audit)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - name: Export locked runtime dependencies
+        run: >-
+          uv export --frozen --no-dev --no-hashes --no-emit-project
+          --format requirements-txt --output-file "$RUNNER_TEMP/requirements.txt"
+      - name: Audit dependencies
+        run: >-
+          uvx pip-audit@2.9.0 --strict --disable-pip --no-deps --progress-spinner off
+          --requirement "$RUNNER_TEMP/requirements.txt"

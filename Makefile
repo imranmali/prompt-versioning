@@ -1,4 +1,5 @@
-.PHONY: install lint format typecheck test test-postgres run migrate check openspec
+.PHONY: install lint format typecheck test test-postgres run migrate check openspec \
+	docker-build compose-up compose-down compose-logs
 
 install:
 	uv sync --frozen
@@ -30,3 +31,17 @@ migrate:
 	uv run promptlab migrate
 
 check: lint typecheck test openspec
+
+IMAGE ?= promptlab:local
+
+docker-build:
+	docker build -t $(IMAGE) .
+
+compose-up:
+	docker compose up --build -d --wait
+
+compose-down:
+	docker compose down
+
+compose-logs:
+	docker compose logs -f api

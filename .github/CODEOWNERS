@@ -1,0 +1,9 @@
+# Default owner for everything in the repository.
+*                   @imranmali
+
+# Delivery pipeline, deployment and specs: changes here affect every environment.
+/.github/           @imranmali
+/deploy/            @imranmali
+/Dockerfile         @imranmali
+/openspec/          @imranmali
+/src/promptlab/migrations/ @imranmali

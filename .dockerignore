@@ -1,0 +1,15 @@
+# Build context allowlist: only what the Dockerfile copies is sent to the daemon.
+*
+!pyproject.toml
+!uv.lock
+!README.md
+!LICENSE
+!src/
+
+# Never ship caches or local artefacts that may sit inside src/
+**/__pycache__
+**/*.py[cod]
+**/*.db
+**/.mypy_cache
+**/.ruff_cache
+**/.pytest_cache

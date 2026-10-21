@@ -1,0 +1,26 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Database migration Job, applied before the API rollout:
+#
+#   kubectl -n promptlab delete job promptlab-migrate --ignore-not-found
+#   kubectl apply -k deploy/k8s/jobs
+#   kubectl -n promptlab wait --for=condition=complete job/promptlab-migrate --timeout=300s
+#
+# Kept outside ../base so applying the Deployment never re-creates (or fights over) the Job.
+
+namespace: promptlab
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: promptlab
+      app.kubernetes.io/part-of: promptlab
+      app.kubernetes.io/managed-by: kustomize
+    includeTemplates: true
+
+resources:
+  - migration-job.yaml
+
+images:
+  - name: ghcr.io/imranmali/prompt-versioning
+    newTag: latest

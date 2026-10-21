@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: promptlab
+  labels:
+    app.kubernetes.io/component: api
+spec:
+  # Voluntary disruptions (node drains, upgrades) evict one API pod at a time.
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: api
