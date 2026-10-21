@@ -12,7 +12,6 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import update
 
 from promptlab.config import Settings
-from promptlab.db import Base
 from promptlab.main import create_app
 from promptlab.models import Experiment, ExperimentStatus
 from promptlab.services import assignment
@@ -208,16 +207,11 @@ async def test_resolve_requires_api_key(app: FastAPI, anon_client: AsyncClient) 
 
 
 @pytest.fixture
-async def cached_app(settings: Settings) -> AsyncIterator[FastAPI]:
+async def cached_app(app: FastAPI, settings: Settings) -> AsyncIterator[FastAPI]:
+    # Depends on ``app`` so the shared test schema exists and starts empty.
     application = create_app(settings.model_copy(update={"resolve_cache_ttl_seconds": 60}))
-    engine = application.state.engine
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
     yield application
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-    await engine.dispose()
+    await application.state.engine.dispose()
 
 
 @pytest.fixture
