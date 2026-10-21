@@ -1,0 +1,17 @@
+schema: spec-driven
+
+context: |
+  PromptLab is a self-hosted HTTP service (Python 3.12+, FastAPI, SQLAlchemy 2 async,
+  PostgreSQL in production, SQLite allowed for local dev/tests) for versioning LLM prompts
+  and running A/B experiments between prompt versions.
+  The API is versioned under /v1 and is the only public contract; JSON in/out.
+  The service MUST stay stateless so it can scale horizontally behind a load balancer:
+  no in-process state may be required for correctness (caches are optional and bounded).
+  Every behavior must be covered by automated tests that run in CI on SQLite and PostgreSQL.
+  Commits follow Conventional Commits; work lands on main only through green pull requests.
+
+rules:
+  proposal:
+    - Always state what is out of scope
+  tasks:
+    - Each task group lands its own tests and docs
